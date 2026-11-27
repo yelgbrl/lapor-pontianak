@@ -1,0 +1,72 @@
+// Mengatur generator Prisma Client.
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+// Menentukan PostgreSQL sebagai database.
+datasource db {
+  provider = "postgresql"
+}
+
+// Menentukan jenis peran pengguna.
+enum Role {
+  USER
+  ADMIN
+}
+
+// Menentukan status laporan.
+enum ReportStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+// Model untuk menyimpan data pengguna.
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reports Report[]
+}
+
+// Model untuk menyimpan kategori laporan.
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  reports Report[]
+}
+
+// Model untuk menyimpan laporan kerusakan.
+model Report {
+  id           String       @id @default(cuid())
+  trackingCode String       @unique
+  title        String
+  description  String
+  location     String
+  photoUrl     String
+  status       ReportStatus @default(PENDING)
+  handlingNote String?
+  userId       String
+  categoryId   String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([createdAt])
+}
